@@ -19,7 +19,6 @@ const employeeSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
-    // Add regex pattern validation for email
     match: emailRegex,
   },
   Designation: {

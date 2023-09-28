@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const EmployeeModel = require("../model/EmployeeModel");
+const generateAccessToken = require("../utils/helper.generateToken");
 
 // Route to handle employee login
 router.post("/login", async (req, res) => {
@@ -10,16 +11,22 @@ router.post("/login", async (req, res) => {
   console.log(email, password);
 
   try {
+    if ((!email, !password)) {
+      return res.status(401).json({ message: "Fields Cannot be empty" });
+    }
+
     const user = await EmployeeModel.findOne({ Email: email });
 
     if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res.status(401).json({ message: "User not found" });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.Password);
 
     if (!passwordMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ message: "Email or password doesn't match" });
     }
 
     // Update the lastLoginTime for the user
@@ -37,11 +44,15 @@ router.post("/login", async (req, res) => {
       process.env.JWT_SECRET
     );
 
+    // const remembermeToken=generateAccessToken({email,password})
+
     // Create an access token for the user's designation
     const designationToken = jwt.sign(
       { designation: user.Designation },
       process.env.JWT_SECRET
     );
+
+    // const designationToken=generateAccessToken({ designation: user.Designation })
 
     res.status(200).json({
       message: "Login successful",
@@ -51,11 +62,9 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     console.error("Error logging in:", error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" + error.message });
   }
 });
-
-
 
 router.post("/logout", async (req, res) => {
   const { email } = req.body;

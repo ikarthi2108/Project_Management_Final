@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const AssignedTaskModel = require("../model/AssignedTaskModel");
 const nodemailer = require("nodemailer");
+const AddProjectModel = require("../model/AddProjectModel");
 
 // Define a route to handle the assignment of a project
 router.post("/assignProject", async (req, res) => {
@@ -71,6 +72,75 @@ router.get("/get-assignedtasks", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+//this route is for the PM
+router.get("/get-assignedtasks-pm", async (req, res) => {
+  try {
+    const { userEmail } = req.query;
+
+    const TaskData = await AssignedTaskModel.find({ managerEmail: userEmail });
+
+    res.status(200).json(TaskData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.put('/update-task-status/:taskId', async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+
+    // Find the task by ID and update its status
+    const updatedTask = await AssignedTaskModel.findByIdAndUpdate(taskId, { status }, { new: true });
+
+    if (!updatedTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    return res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+
+//tl Report manager
+
+//this route is for the tl
+router.get("/get-assignedtasks-tl", async (req, res) => {
+  try {
+    const { userEmail } = req.query;
+
+    const TaskData = await AddProjectModel.find({ teamLeadEmail: userEmail });
+
+    res.status(200).json(TaskData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.put('/update-task-status-tl/:taskId', async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { status } = req.body;
+
+    // Assuming your Mongoose model is named TaskModel
+    const updatedTask = await AddProjectModel.findByIdAndUpdate(taskId, { status }, { new: true });
+
+    if (!updatedTask) {
+      return res.status(404).json({ error: 'Task not found' });
+    }
+
+    return res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
